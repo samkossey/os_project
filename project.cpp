@@ -30,28 +30,34 @@ int main(void){
 		bool waitNew = true;
 		while (getline(input, line)){
 		    while (waitNew){
+		    	//@TODO no new external events??
+		    	//@TODO no external event but an internal event
 		        if (sys->internal == -1 && sys->external == -1){
 		            waitNew = false;
 		        }
 		        if (sys->internal == -1 && sys->external != -1){
 		        //handle external event
-		        handleEvent(sys);
+		        handleEvent(sys, true);
 		        waitNew = false;
 		        }
 		        else if (sys->internal != -1 && sys->external == -1){
 		        //handle internal event
+		        cout << "does this one ever happen??" << endl;
+		        handleEvent(sys, false);
 		        }
 		        else if (sys->internal != -1 && sys->external != -1){
 		            if (sys->external < sys->internal){
 		            //handle external
+		            handleEvent(sys, true);
 		            waitNew = false;
 		            }
 		            else{
 		            //handle internal
+		            handleEvent(sys, false);
 		            }
 		        }
 		    }
-			cout << parse(line, sys) << endl;
+			parse(line, sys);
 			waitNew = true;
 		}
 

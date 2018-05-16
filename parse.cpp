@@ -14,7 +14,7 @@ int parse(string line, System* s){
 	else if (first == 'D'){
 		return parseD(line, s);
 	}
-	return -2;
+	return -1;
 }
 
 int parseC(string line, System* s){
@@ -79,7 +79,7 @@ int parseD(string line, System* s){
 		ti = ti + line.at(i);
 		i++;
 	}
-	if (atoi(ti.c_str() < s->lastTime){
+	if (atoi(ti.c_str()) < s->lastTime){
 		return -1;
 	}
 	s->next = D;
@@ -166,7 +166,7 @@ int parseA(string line, System* s){
 	}
 	s->process = pr;
 	s->next = A;
-	s->jobs.push_back(pr);
+	s->lastTime = pr->arrival;
 	return pr->arrival;
 }
 
@@ -185,7 +185,6 @@ int parseQL(string line, System* s){
 			}
 			dev.ti = atoi(ti.c_str());
 			if (dev.ti < s->lastTime){
-				dev = NULL;
 				return -1;
 			}
 			i++;
@@ -201,7 +200,6 @@ int parseQL(string line, System* s){
 			}
 			dev.ti = atoi(ti.c_str());
 			if (dev.ti < s->lastTime){
-				dev = NULL;
 				return -1;
 			}
 			i++;
@@ -231,6 +229,8 @@ int parseQL(string line, System* s){
 			i++;
 		}
 	}
+	s->external = dev.ti;
+	s->lastTime = dev.ti;
 	s->devreq = dev;
 	return dev.ti;
 }

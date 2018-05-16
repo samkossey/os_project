@@ -10,10 +10,10 @@ using namespace std;
 #ifndef projectheader
 #define projectheader
 
-enum CurrState {Running, Submit, HQ1, HQ2, RQ, Wait, Complete};
+enum CurrState {New, Running, Submit, HQ1, HQ2, RQ, Wait, Complete};
 
 
-enum NextExt {A,Q,L,D,N};
+enum NextExt {A,Q,L,D,N,I};
 
 struct Process{
 	int num;
@@ -50,6 +50,7 @@ struct System{
 	int lastTime;
 	NextExt next;
 	Process* process;
+	Process* running;
 	Dev devreq;
 	vector<Process*> jobs;
 	LinkedList* rq;
@@ -60,6 +61,7 @@ struct System{
 		rq = new LinkedList();
 		hq1 = new LinkedList();
 		hq2 = new LinkedList();
+		running = NULL;
 	}
 	~System(){
 		delete rq;
@@ -77,7 +79,8 @@ int parseD(string line, System* s);
 int parseA(string line, System* s);
 int parseQL(string line, System* s);
 void deleteJobSys(System* s, Process* p);
-void handleEvent(System* s);
+void handleEvent(System* s, bool ext);
 void process_arrival(Process* p, System* s);
+void round_robin(System *s);
 
 #endif
