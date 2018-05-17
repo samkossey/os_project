@@ -29,6 +29,12 @@ int main(void){
 		sys->external = -1;
 		bool waitNew = true;
 		while (getline(input, line)){
+			parse(line, sys);
+			if (sys->external == 9999 && sys->next == D){
+				handleEvent(sys, true);
+				break;
+			}
+			waitNew = true;
 		    while (waitNew){
 		    	//@TODO no new external events??
 		    	//@TODO no external event but an internal event
@@ -43,7 +49,7 @@ int main(void){
 		        else if (sys->internal != -1 && sys->external == -1){
 		        //handle internal event
 		        cout << "does this one ever happen??" << endl;
-		        handleEvent(sys, false);
+		        waitNew = false;
 		        }
 		        else if (sys->internal != -1 && sys->external != -1){
 		            if (sys->external < sys->internal){
@@ -57,18 +63,11 @@ int main(void){
 		            }
 		        }
 		    }
-			parse(line, sys);
-			waitNew = true;
 		}
 
 		input.close();
 		delete sys;
 	}
-
-
-
-
-
 
 	return 0;
 }

@@ -27,6 +27,9 @@ void handleEvent(System* s, bool ext){
 			process_arrival(s->process, s);
 		}
 	}
+	else if(s->next == D){
+		cout << "will handle display" << endl;
+	}
 	else{
 		cout << "different external event" << endl;
 	}
@@ -127,18 +130,26 @@ void addFromHold(System* s){
 		if (temp1->proc->memory <= s->a_mem){
 			s->a_mem = s->a_mem - temp1->proc->memory;
 			addToReady(temp1->proc, s);
+			Node* newn = temp1->next;
 			//@TODO does remove job delete????
 			s->hq1->removeJob(temp1->proc->num);
+			temp1 = newn;
 		}
+		else{
 		temp1 = temp1->next;
+		}
 	}
 	while (temp2 != NULL && s->a_mem != 0){
 		if (temp2->proc->memory <= s->a_mem){
 			s->a_mem = s->a_mem - temp2->proc->memory;
 			addToReady(temp2->proc, s);
+			Node* newn = temp2->next;
 			s->hq2->removeJob(temp2->proc->num);
+			temp2 = newn;
 		}
+		else{
 		temp2 = temp2->next;
+		}
 	}
 	
 }
