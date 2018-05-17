@@ -135,7 +135,7 @@ void addFromHold(System* s){
 	while (temp2 != NULL && s->a_mem != 0){
 		if (temp2->proc->memory <= s->a_mem){
 			s->a_mem = s->a_mem - temp2->proc->memory;
-			addToReady(temp1->proc, s);
+			addToReady(temp2->proc, s);
 			s->hq2->removeJob(temp2->proc->num);
 		}
 		temp2 = temp2->next;
