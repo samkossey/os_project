@@ -44,43 +44,29 @@ void process_arrival(Process* p, System* s){
 	s->curr_ti = s->external;
 	s->external = -1;
 	if (p->memory <= s->tot_mem && p->max_dev <= s->tot_dev){
+		//enough memory/devices in total to keep the job
 		s->jobs.push_back(p);
 		if (p->memory <= s->a_mem){
 			s->a_mem = s->a_mem - p->memory;
-			//@TODO add process to ready queue
-			if (s->running == NULL && s->rq->count == 0){
-				s->running = p;
-				p->state = Running;
-				if (p->run_remain < s->quantum){
-					s->internal = s->curr_ti + p->run_remain;
-					p->run_remain = 0;
-				}
-				else{
-					s->internal = s->curr_ti + s->quantum;
-					p->run_remain = p->run_remain - s->quantum;
-				}
+			//add process to ready queue/starting running if no one else is
+			addToReady(p, s);
+				
 			s->process = NULL;	
-			}
-			else{
-				s->rq->putFIFO(p);
-				p->state = RQ;
-				s->process = NULL;
-			}
 		}
 		else{
-			//@TODO add to SJF or FIFO based on priority
+			//add to SJF or FIFO based on priority
 			if (p->priority == 1){
-				//@TODO add to SJF
+				//add to SJF
 				s->hq1->putSJF(p);
 				p->state = HQ1;
 			}
 			else if (p->priority == 2){
-				//@TODO add to FIFO
+				//add to FIFO
 				s->hq2->putFIFO(p);
 				p->state = HQ2;
 			}
+		s->process = NULL;
 		}
-	s->process = NULL;
 	}
 	else{
 		s->process = NULL;
@@ -133,9 +119,47 @@ void release_device(Dev d, System* s, Process* p){
 	}
 }
 
-//@TODO not done
-void addToReady(System* s){
-	//@TODO parse through both queues
+//@TODO 
+void addFromHold(System* s){
+	Node* temp1 = s->hq1->head;
+	Node* temp2 = s->hq2->head;
+	while (temp1 != NULL && s->a_mem != 0){
+		if (temp1->proc->memory <= s->a_mem){
+			s->a_mem = s->a_mem - temp1->proc->memory;
+			addToReady(temp1->proc, s);
+			//@TODO does remove job delete????
+			s->hq1->removeJob(temp1->proc->num);
+		}
+		temp1 = temp1->next;
+	}
+	while (temp2 != NULL && s->a_mem != 0){
+		if (temp2->proc->memory <= s->a_mem){
+			s->a_mem = s->a_mem - temp2->proc->memory;
+			addToReady(temp1->proc, s);
+			s->hq2->removeJob(temp2->proc->num);
+		}
+		temp2 = temp2->next;
+	}
+	
+}
+
+void addToReady(Process *p, System* s){
+	if (s->rq->count == 0 && s->running == NULL){
+		s->running = p;
+		p->state = Running;
+		if (p->run_remain < s->quantum){
+				s->internal = s->curr_ti + p->run_remain;
+				p->run_remain = 0;
+			}
+		else{
+				s->internal = s->curr_ti + s->quantum;
+				p->run_remain = p->run_remain - s->quantum;
+			}
+	}
+	else{
+		s->rq->putFIFO(p);
+		p->state = RQ;
+	}
 }
 
 //@TODO not done
@@ -147,8 +171,8 @@ void complete_process(Process* p, System* s){
 	s->a_mem = s->a_mem + p->memory;
 	s->a_dev = s->a_dev + p->curr_dev;
 	p->curr_dev = 0;
-	//@TODO check for processes in HQ1 then HQ2
-	addToReady(s);
+	
+	addFromHold(s);
 
 
 }

@@ -82,5 +82,6 @@ void deleteJobSys(System* s, Process* p);
 void handleEvent(System* s, bool ext);
 void process_arrival(Process* p, System* s);
 void round_robin(System *s);
+void addToReady(Process *p, System *s);
 
 #endif
