@@ -27,6 +27,7 @@ public:
 	void putSJF(Process* p);
 	void putDQ(Process* p);
 	void removeJob(int jobnum);
+	vector<int> displayList();
 
 // 	{
 // 		Node* t = tail;

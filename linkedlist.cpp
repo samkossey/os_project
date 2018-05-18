@@ -11,6 +11,19 @@ LinkedList::~LinkedList(){
     }
 }
 
+vector<int> LinkedList::displayList(){
+    Node* n = this->head;
+    int length = this->count;
+    vector<int> list;
+    int index = 0;
+    while (n != NULL){
+        list.push_back(n->proc->num);
+        n = n->next;
+        index++;
+    }
+    return list;
+}
+
 void LinkedList::putFIFO(Process* p){
     Node *n = new Node(p);
     if (count == 0){

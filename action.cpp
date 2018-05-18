@@ -32,12 +32,12 @@ void handleEvent(System* s, bool ext){
 		cout << "will handle display" << endl;
 	}
 	else if(s->next == Q){
-		request_device(s->devreq, s);
 		cout << "handle dev req" << endl;
+		request_device(s->devreq, s);
 	}
 	else if(s->next == L){
-		release_device(s->devreq, s);
 		cout << "handle release" << endl;
+		release_device(s->devreq, s);
 	}
 	else{
 		cout << "different external event" << endl;
@@ -54,8 +54,8 @@ void display(System* s){
 	
 	ofstream myfile;
 	string filename;
-	filename = s->filename + "_"+ to_string(s->curr_ti) + ".json";
-	myfile.open (filename);
+	filename = s->filename + "_"+ ".json";
+	myfile.open (filename.c_str());
 	myfile << "Writing this to a file.\n";
 	myfile.close();
 	
@@ -145,7 +145,7 @@ void request_device(Dev d, System* s){
 	s->curr_ti = s->external;
 	s->external = -1;
 	Process* p = s->running;
-	if (p != NULL && d.num == p->num){
+	if (p != NULL && d.job_num == p->num){
 		int avail = s->a_dev;
 		int alloc = d.num;
 		if (d.num > s->tot_dev){
@@ -217,14 +217,14 @@ void release_device(Dev d, System* s){
 	s->curr_ti = s->external;
 	s->external = -1;
 	Process* p = s->running;
-	if (p != NULL && (d.num <= p->curr_dev)){
+	if (p != NULL && (p->num == d.job_num)&& (d.num <= p->curr_dev)){
 			p->curr_dev = p->curr_dev - d.num;
 			s->a_dev = s->a_dev + d.num;
 			interruptQuant(s);
 			p->state = RQ;
 			//@TODO add to ready or check wait first??
-			toReadyFromComplete(p,s);
 			checkWaitQ(s);
+			toReadyFromComplete(p,s);
 			round_robin(s);
 	}
 	else{
@@ -291,24 +291,24 @@ void addToReady(Process *p, System* s){
 }
 
 void toReadyFromComplete(Process* p, System* s){
-	if (s->rq->count == 0 && s->running == NULL){
-		s->running = p;
-		p->state = Running;
-		if (p->run_remain < s->quantum){
-				s->internal = s->curr_ti + p->run_remain;
-				p->run_remain = 0;
-				p->endQuant = s->internal;
-			}
-		else{
-				s->internal = s->curr_ti + s->quantum;
-				p->run_remain = p->run_remain - s->quantum;
-				p->endQuant = s->internal;
-			}
-	}
-	else{
+	// if (s->rq->count == 0 && s->running == NULL){
+	// 	s->running = p;
+	// 	p->state = Running;
+	// 	if (p->run_remain < s->quantum){
+	// 			s->internal = s->curr_ti + p->run_remain;
+	// 			p->run_remain = 0;
+	// 			p->endQuant = s->internal;
+	// 		}
+	// 	else{
+	// 			s->internal = s->curr_ti + s->quantum;
+	// 			p->run_remain = p->run_remain - s->quantum;
+	// 			p->endQuant = s->internal;
+	// 		}
+	// }
+	// else{
 		s->rq->putFIFO(p);
 		p->state = RQ;
-	}
+	//}
 }
 
 //@TODO not done
@@ -331,6 +331,11 @@ void round_robin(System* s){
 		cout << "bad timing round robin" << endl;
 		return;
 	}
+	// if (s->running != NULL){
+	// 	if (s->curr_ti != s->running->endQuant){
+	// 		return;
+	// 	}
+	// }
 	s->curr_ti = s->internal;
 	s->internal = -1;
 	
