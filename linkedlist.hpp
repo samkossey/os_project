@@ -25,6 +25,7 @@ public:
 	~LinkedList();
 	void putFIFO(Process* p);
 	void putSJF(Process* p);
+	void putDQ(Process* p);
 	void removeJob(int jobnum);
 
 // 	{

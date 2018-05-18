@@ -32,6 +32,22 @@ struct Process{
 
 };
 
+struct Banker{
+	int num;
+	int need;
+	int alloc;
+	bool finished;
+	// Banker(int n, int need, int a){
+	// 	num = n;
+	// 	need_dev = need;
+	// 	alloc = a;
+	// 	finished = false;
+	// }
+	// ~Banker(){
+		
+	// }
+};
+
 struct Dev{
 	int num;
 	int job_num;
@@ -60,17 +76,20 @@ struct System{
 	LinkedList* rq;
 	LinkedList* hq1;
 	LinkedList* hq2;
+	LinkedList* dq;
 	
 	System(){
 		rq = new LinkedList();
 		hq1 = new LinkedList();
 		hq2 = new LinkedList();
+		dq = new LinkedList();
 		running = NULL;
 	}
 	~System(){
 		delete rq;
 		delete hq1;
 		delete hq2;
+		delete dq;
 		for (int i = 0; i<this->jobs.size(); i++){
 		    delete this->jobs[i];
 		}
@@ -89,5 +108,9 @@ void round_robin(System *s);
 void addToReady(Process *p, System *s);
 void toReadyFromComplete(Process* p, System* s);
 void display(System* s);
+void interruptQuant(System* s);
+bool bankers(System*s, Process* p);
+bool checkSafe(Banker* b, int avail, int length);
+void request_device(Dev d, System* s);
 
 #endif

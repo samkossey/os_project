@@ -55,6 +55,34 @@ void LinkedList::putSJF(Process* p){
     }
 }
 
+void LinkedList::putDQ(Process* p){
+    Node *n = new Node(p);
+    int w = p->waiting;
+    if (count == 0){
+        this->head = n;
+        this->count = 1;
+    }
+    else if (this->head->proc->tot_run > w){
+        n->next = this->head;
+        this->head = n; 
+    }
+    else{
+        Node* temp = this->head;
+        while (temp->next != NULL && (temp->next->proc->tot_run <= w)){
+            temp = temp->next;
+        }
+        if (temp->next == NULL){
+            temp->next = n;
+        }
+        else{
+            Node* saveOld = temp->next;
+            temp->next = n;
+            n->next = saveOld;
+        }
+        this->count ++;
+    }
+}
+
 void LinkedList::removeJob(int jobnum){
     Node* temp = this->head;
     if (temp->proc->num == jobnum){

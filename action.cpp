@@ -31,6 +31,10 @@ void handleEvent(System* s, bool ext){
 		//display(s);
 		cout << "will handle display" << endl;
 	}
+	else if(s->next == Q){
+		request_device(s->devreq, s);
+		cout << "handle dev req" << endl;
+	}
 	else{
 		cout << "different external event" << endl;
 	}
@@ -56,12 +60,14 @@ void display(System* s){
 
 void process_arrival(Process* p, System* s){
 	if (p == NULL){
+		s->external = -1;
 		return;
 	}
 	if (s->curr_ti > s->external){
 		cout << "bad timing" << endl;
 		delete s->process;
 		s->process = NULL;
+		s->external = -1;
 		return;
 	}
 	s->curr_ti = s->external;
@@ -97,34 +103,78 @@ void process_arrival(Process* p, System* s){
 	}
 }
 
-void request_device(Dev d, System* s, Process* p){
-	if (p->state == Running){
+void request_device(Dev d, System* s){
+	if (s->curr_ti > s->external){
+		cout << "bad timing" << endl;
+		s->process = NULL;
+		s->external = -1;
+		return;
+	}
+	s->curr_ti = s->external;
+	s->external = -1;
+	Process* p = s->running;
+	if (p != NULL && d.num == p->num){
 		//@TODO fake allocate
-
-		//@TODO If banker's accepts as state you can allocate
-		bool accept = false;
-
-		if (accept){
-			p->curr_dev = p->curr_dev + d.num;
-			p->remain_dev = p->max_dev - d.num;
-			s->a_dev = s->a_dev - d.num;
-			s->running = NULL;
-			//@TODO someone else needs to start if no one is running
-			addToReady(p, s);
+		int avail = s->a_dev;
+		int alloc = d.num;
+		if (d.num > s->tot_dev){
+			cout << "error requested too many devices" << endl;
+			//@TODO interrupt quantum
+			interruptQuant(s);
+			p->state = RQ;
+			addToReady(p,s);
+			return;
 		}
-		else{
-			//@TODO add to device queue
-			//@TODO remove from running
-			//@TODO call new running
+		interruptQuant(s);
+		if (d.num > s->a_dev){
+			//@TODO add to dev queue
 			p->waiting = d.num;
 			p->state = Wait;
+			s->dq->putDQ(p);
+			round_robin(s);
+			return;
 		}
-
+		else{
+		//@TODO If banker's accepts as state you can allocate
+		bool accept = false;
+		p->curr_dev = p->curr_dev + d.num;
+		p->remain_dev = p->remain_dev - d.num;
+		s->a_dev = s->a_dev - d.num;
+		accept = bankers(s, p);
+		if (accept){
+			//@TODO someone else needs to start if no one is running
+			addToReady(p, s);
+			return;
+		}
+		else{
+			p->curr_dev = p->curr_dev - d.num;
+			p->remain_dev = p->remain_dev + d.num;
+			s->a_dev = s->a_dev + d.num;
+			
+			p->waiting = d.num;
+			p->state = Wait;
+			s->dq->putDQ(p);
+			round_robin(s);
+			return;
+		}
+		}
 	}
 	else{
 		//@TODO some kind of error
 		cout << "Couldn't request because wasn't running" << endl;
 	}
+}
+
+void interruptQuant(System* s){
+	if (s->running == NULL){
+		return;
+	}
+	else{
+		s->running->run_remain = s->running->run_remain + (s->running->endQuant - s->curr_ti);
+		s->running->endQuant = s->curr_ti;
+		s->running = NULL;
+	}
+	s->internal = s->curr_ti;
 }
 
 void release_device(Dev d, System* s, Process* p){
@@ -231,7 +281,7 @@ void complete_process(Process* p, System* s){
 	s->a_dev = s->a_dev + p->curr_dev;
 	p->curr_dev = 0;
 	p->compl_ti = s->curr_ti;
-	
+	//@TODO add from device queue first
 	addFromHold(s);
 
 
@@ -279,27 +329,61 @@ void round_robin(System* s){
 
 	//@TODO process state ???
 }
-/*
-bool checkSafe(System* s, int ){
-	return false;
+
+bool checkSafe(Banker* b, int avail, int length){
+	bool alldone = false;
+	while (!alldone){
+		alldone = true;
+	for (int i = 0; i < length; i++){
+		if (!(b[i].finished)){
+			if (b[i].need <= avail){
+				alldone = false;
+				avail = avail + b[i].alloc;
+				b[i].finished = true;
+			}
+		}
+	}
+	}
+	for (int i = 0; i < length; i++){
+		if (!(b[i].finished)){
+			return false;
+		}
+	}
+	return true;
 }
 
-bool bankers(System* s, Process* p, int req){
+bool bankers(System* s, Process *p){
+	int length = s->rq->count + s->dq->count + 1;
+	Banker* bank = new Banker[length];
+	int index = 0;
+	Node* rq = s->rq->head;
+	while (rq != NULL){
+		bank[index].finished = false;
+		bank[index].need = rq->proc->remain_dev;
+		bank[index].num = rq->proc->num;
+		bank[index].alloc = rq->proc->curr_dev;
+		rq = rq->next;
+		index ++;
+	}
+	Node* dq = s->dq->head;
+	while (dq != NULL){
+		bank[index].finished = false;
+		bank[index].need = dq->proc->remain_dev;
+		bank[index].num = dq->proc->num;
+		bank[index].alloc = dq->proc->curr_dev;
+		dq = dq->next;
+		index ++;
+	}
+	bank[index].finished = false;
+	bank[index].need = p->remain_dev;
+	bank[index].num = p->num;
+	bank[index].alloc = p->curr_dev;
+	
 	int avail = s->a_dev;
-	int need = p->max_dev - p->curr_dev;
-	if (req <= need){
-		if (req <= avail){
-			//int length = length of ready + running + waiting
-			//allocate array of that size -- maybe even map job # to needs/allocation
-			return checkSafe();
-		}
-		else{
-			//error
-		}
-	}
-	else{
-		//error
-	}
+	
+	bool safe = checkSafe(bank, avail, length);
+	delete [] bank;
+	return safe;
+
 }
 
-*/
