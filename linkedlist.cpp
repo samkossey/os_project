@@ -83,37 +83,7 @@ void LinkedList::removeJob(int jobnum){
 }
 
 
-// class FIFO_Queue{
-// public:
-//     Node* head;
-//     int count;
-// 	FIFO_Queue(){
-// 	    count = 0;
-// 	    head = NULL;
-// 	}
-// 	void put(const Process& p)
 
-// 	{
-// 		Node* t = tail;
-// 		head= new Node(p);
-// 		if(head == 0)
-// 			head = tail;
-// 		else
-// 			t-> next = tail;
-// 			count++;
-// }
-
-// Process get(){
-// 	Process p = head-> proc;
-// 	Link t = head-> next;
-// 	delete head;
-// 	head = t;
-// 	if(head==0)
-// 		tail = 0;
-// 	return p;
-// }
-    
-// };
 
 // int main(void){
 //     LinkedList* l = new LinkedList();

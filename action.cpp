@@ -28,11 +28,30 @@ void handleEvent(System* s, bool ext){
 		}
 	}
 	else if(s->next == D){
+		//display(s);
 		cout << "will handle display" << endl;
 	}
 	else{
 		cout << "different external event" << endl;
 	}
+}
+
+void display(System* s){
+	if (s->curr_ti > s->external){
+		cout << "bad timing" << endl;
+		return;
+	}
+	s->curr_ti = s->external;
+	s->external = -1;
+	
+	ofstream myfile;
+	string filename;
+	filename = s->filename + "_"+ to_string(s->curr_ti) + ".json";
+	myfile.open (filename);
+	myfile << "Writing this to a file.\n";
+	myfile.close();
+	
+	
 }
 
 void process_arrival(Process* p, System* s){
@@ -41,6 +60,7 @@ void process_arrival(Process* p, System* s){
 	}
 	if (s->curr_ti > s->external){
 		cout << "bad timing" << endl;
+		delete s->process;
 		s->process = NULL;
 		return;
 	}
@@ -72,6 +92,7 @@ void process_arrival(Process* p, System* s){
 		}
 	}
 	else{
+		delete s->process;
 		s->process = NULL;
 	}
 }
@@ -85,11 +106,11 @@ void request_device(Dev d, System* s, Process* p){
 
 		if (accept){
 			p->curr_dev = p->curr_dev + d.num;
+			p->remain_dev = p->max_dev - d.num;
 			s->a_dev = s->a_dev - d.num;
-			//@TODO remove from running
-			//@TODO call new running
-			//@TODO add back to ready queue
-			p->state = RQ;
+			s->running = NULL;
+			//@TODO someone else needs to start if no one is running
+			addToReady(p, s);
 		}
 		else{
 			//@TODO add to device queue
@@ -102,6 +123,7 @@ void request_device(Dev d, System* s, Process* p){
 	}
 	else{
 		//@TODO some kind of error
+		cout << "Couldn't request because wasn't running" << endl;
 	}
 }
 
@@ -109,16 +131,14 @@ void release_device(Dev d, System* s, Process* p){
 	if (p->state == Running){
 			p->curr_dev = p->curr_dev - d.num;
 			s->a_dev = s->a_dev + d.num;
-			//@TODO remove from running
-			//@TODO call new running
-			//@TODO add back to ready queue
-			p->state = RQ;
-
+			addToReady(p, s);
+			//@TODO added back to ready queue before or after other waiting processes
 			//@TODO check device queue for safe waiting processes
 			//@TODO poss add them to the ready queue
 	}
 	else{
 		//@TODO some kind of error
+		cout << "Couldn't release because wasn't running" << endl;
 	}
 }
 
@@ -129,7 +149,7 @@ void addFromHold(System* s){
 	while (temp1 != NULL && s->a_mem != 0){
 		if (temp1->proc->memory <= s->a_mem){
 			s->a_mem = s->a_mem - temp1->proc->memory;
-			addToReady(temp1->proc, s);
+			toReadyFromComplete(temp1->proc, s);
 			Node* newn = temp1->next;
 			//@TODO does remove job delete????
 			s->hq1->removeJob(temp1->proc->num);
@@ -142,7 +162,7 @@ void addFromHold(System* s){
 	while (temp2 != NULL && s->a_mem != 0){
 		if (temp2->proc->memory <= s->a_mem){
 			s->a_mem = s->a_mem - temp2->proc->memory;
-			addToReady(temp2->proc, s);
+			toReadyFromComplete(temp2->proc, s);
 			Node* newn = temp2->next;
 			s->hq2->removeJob(temp2->proc->num);
 			temp2 = newn;
@@ -161,10 +181,38 @@ void addToReady(Process *p, System* s){
 		if (p->run_remain < s->quantum){
 				s->internal = s->curr_ti + p->run_remain;
 				p->run_remain = 0;
+				p->endQuant = s->internal;
 			}
 		else{
 				s->internal = s->curr_ti + s->quantum;
 				p->run_remain = p->run_remain - s->quantum;
+				p->endQuant = s->internal;
+				
+			}
+	}
+	else{
+		s->rq->putFIFO(p);
+		p->state = RQ;
+		if (s->running == NULL){
+			s->internal = s->curr_ti;
+			round_robin(s);
+		}
+	}
+}
+
+void toReadyFromComplete(Process* p, System* s){
+	if (s->rq->count == 0 && s->running == NULL){
+		s->running = p;
+		p->state = Running;
+		if (p->run_remain < s->quantum){
+				s->internal = s->curr_ti + p->run_remain;
+				p->run_remain = 0;
+				p->endQuant = s->internal;
+			}
+		else{
+				s->internal = s->curr_ti + s->quantum;
+				p->run_remain = p->run_remain - s->quantum;
+				p->endQuant = s->internal;
 			}
 	}
 	else{
@@ -182,6 +230,7 @@ void complete_process(Process* p, System* s){
 	s->a_mem = s->a_mem + p->memory;
 	s->a_dev = s->a_dev + p->curr_dev;
 	p->curr_dev = 0;
+	p->compl_ti = s->curr_ti;
 	
 	addFromHold(s);
 
@@ -196,6 +245,10 @@ void round_robin(System* s){
 	s->curr_ti = s->internal;
 	s->internal = -1;
 	
+	if (s->running == NULL){
+		
+	}
+	else{
 	if (s->running->run_remain == 0){
 		complete_process(s->running, s);
 	}
@@ -204,17 +257,24 @@ void round_robin(System* s){
 		s->running->state = RQ;
 		s->running = NULL;
 	}
+	}
 	if (s->rq->head != NULL){
 		s->running = s->rq->head->proc;
 		s->rq->removeJob(s->rq->head->proc->num);
+		s->running->state = Running;
 		if (s->running->run_remain < s->quantum){
 			s->internal = s->curr_ti + s->running->run_remain;
+			s->running->endQuant = s->internal;
 			s->running->run_remain = 0;
 		}
 		else{
 			s->internal = s->curr_ti + s->quantum;
+			s->running->endQuant = s->internal;
 			s->running->run_remain = s->running->run_remain - s->quantum;
 		}
+	}
+	else{
+		s->internal = -1;
 	}
 
 	//@TODO process state ???

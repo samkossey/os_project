@@ -21,11 +21,14 @@ struct Process{
 	int tot_run;
 	int run_remain;
 	CurrState state;
+	int endQuant;
 	int memory;
 	int max_dev;
 	int curr_dev;
+	int remain_dev;
+	int compl_ti;
 	int priority;
-	int waiting;
+	int waiting; //how many devices it is waiting for
 
 };
 
@@ -38,6 +41,7 @@ struct Dev{
 
 #include "linkedlist.hpp"
 struct System{
+	string filename;
 	int tot_mem;
 	int a_mem;
 	int tot_dev;
@@ -83,5 +87,7 @@ void handleEvent(System* s, bool ext);
 void process_arrival(Process* p, System* s);
 void round_robin(System *s);
 void addToReady(Process *p, System *s);
+void toReadyFromComplete(Process* p, System* s);
+void display(System* s);
 
 #endif

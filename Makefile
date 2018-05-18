@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -g
+CXXFLAGS = -std=c++11 -g
 
 main: project.o linkedlist.o action.o parse.o
 	$(CXX) $(CXXFLAGS) -o main project.o linkedlist.o action.o parse.o

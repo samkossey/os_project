@@ -138,6 +138,9 @@ int parseA(string line, System* s){
 				i++;
 			}
 			pr->max_dev = atoi(d.c_str());
+			pr->remain_dev = pr->max_dev;
+			pr->waiting = 0;
+			pr->compl_ti = -1;
 			pr->curr_dev = 0;
 			i++;
 		}

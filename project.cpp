@@ -9,7 +9,7 @@ int main(void){
 	cin >> name;
 	ifstream input;
 	System* sys = new System();
-
+	sys->filename = name;
 	//open file
 	input.open(name.c_str());
 	if (input.is_open()){
@@ -30,10 +30,6 @@ int main(void){
 		bool waitNew = true;
 		while (getline(input, line)){
 			parse(line, sys);
-			if (sys->external == 9999 && sys->next == D){
-				handleEvent(sys, true);
-				break;
-			}
 			waitNew = true;
 		    while (waitNew){
 		    	//@TODO no new external events??
