@@ -35,6 +35,10 @@ void handleEvent(System* s, bool ext){
 		request_device(s->devreq, s);
 		cout << "handle dev req" << endl;
 	}
+	else if(s->next == L){
+		release_device(s->devreq, s);
+		cout << "handle release" << endl;
+	}
 	else{
 		cout << "different external event" << endl;
 	}
@@ -103,10 +107,38 @@ void process_arrival(Process* p, System* s){
 	}
 }
 
+void checkWaitQ(System* s){
+	Node* temp = s->dq->head;
+	while (temp != NULL){
+		if (temp->proc->waiting > s->a_dev){
+			break;
+		}
+		else{
+			bool accept = false;
+			temp->proc->curr_dev = temp->proc->curr_dev + temp->proc->waiting;
+			temp->proc->remain_dev = temp->proc->remain_dev - temp->proc->waiting;
+			s->a_dev = s->a_dev - temp->proc->waiting;
+			accept = bankers(s,NULL);
+			if (accept){
+				temp->proc->waiting = 0;
+				Node* newn = temp->next;
+				toReadyFromComplete(temp->proc, s);
+				s->dq->removeJob(temp->proc->num);
+				temp = newn;
+			}
+			else{
+				temp->proc->curr_dev = temp->proc->curr_dev - temp->proc->waiting;
+				temp->proc->remain_dev = temp->proc->remain_dev + temp->proc->waiting;
+				s->a_dev = s->a_dev + temp->proc->waiting;
+				temp = temp->next;
+			}
+		}
+	}
+}
+
 void request_device(Dev d, System* s){
 	if (s->curr_ti > s->external){
 		cout << "bad timing" << endl;
-		s->process = NULL;
 		s->external = -1;
 		return;
 	}
@@ -114,12 +146,11 @@ void request_device(Dev d, System* s){
 	s->external = -1;
 	Process* p = s->running;
 	if (p != NULL && d.num == p->num){
-		//@TODO fake allocate
 		int avail = s->a_dev;
 		int alloc = d.num;
 		if (d.num > s->tot_dev){
 			cout << "error requested too many devices" << endl;
-			//@TODO interrupt quantum
+			//@TODO interrupt quantum or ignore request????
 			interruptQuant(s);
 			p->state = RQ;
 			addToReady(p,s);
@@ -127,7 +158,7 @@ void request_device(Dev d, System* s){
 		}
 		interruptQuant(s);
 		if (d.num > s->a_dev){
-			//@TODO add to dev queue
+			//add to dev queue
 			p->waiting = d.num;
 			p->state = Wait;
 			s->dq->putDQ(p);
@@ -135,14 +166,14 @@ void request_device(Dev d, System* s){
 			return;
 		}
 		else{
-		//@TODO If banker's accepts as state you can allocate
+		//If banker's accepts as state you can allocate
 		bool accept = false;
 		p->curr_dev = p->curr_dev + d.num;
 		p->remain_dev = p->remain_dev - d.num;
 		s->a_dev = s->a_dev - d.num;
 		accept = bankers(s, p);
 		if (accept){
-			//@TODO someone else needs to start if no one is running
+			//someone else needs to start if no one is running
 			addToReady(p, s);
 			return;
 		}
@@ -177,14 +208,24 @@ void interruptQuant(System* s){
 	s->internal = s->curr_ti;
 }
 
-void release_device(Dev d, System* s, Process* p){
-	if (p->state == Running){
+void release_device(Dev d, System* s){
+	if (s->curr_ti > s->external){
+		cout << "bad timing" << endl;
+		s->external = -1;
+		return;
+	}
+	s->curr_ti = s->external;
+	s->external = -1;
+	Process* p = s->running;
+	if (p != NULL && (d.num <= p->curr_dev)){
 			p->curr_dev = p->curr_dev - d.num;
 			s->a_dev = s->a_dev + d.num;
-			addToReady(p, s);
-			//@TODO added back to ready queue before or after other waiting processes
-			//@TODO check device queue for safe waiting processes
-			//@TODO poss add them to the ready queue
+			interruptQuant(s);
+			p->state = RQ;
+			//@TODO add to ready or check wait first??
+			toReadyFromComplete(p,s);
+			checkWaitQ(s);
+			round_robin(s);
 	}
 	else{
 		//@TODO some kind of error
@@ -201,7 +242,6 @@ void addFromHold(System* s){
 			s->a_mem = s->a_mem - temp1->proc->memory;
 			toReadyFromComplete(temp1->proc, s);
 			Node* newn = temp1->next;
-			//@TODO does remove job delete????
 			s->hq1->removeJob(temp1->proc->num);
 			temp1 = newn;
 		}
@@ -273,7 +313,6 @@ void toReadyFromComplete(Process* p, System* s){
 
 //@TODO not done
 void complete_process(Process* p, System* s){
-	//TODO release_device()
 	p->state = Complete;
 	s->running = NULL;
 	//@TODO add to complete list
@@ -281,7 +320,7 @@ void complete_process(Process* p, System* s){
 	s->a_dev = s->a_dev + p->curr_dev;
 	p->curr_dev = 0;
 	p->compl_ti = s->curr_ti;
-	//@TODO add from device queue first
+	checkWaitQ(s);
 	addFromHold(s);
 
 
@@ -327,7 +366,6 @@ void round_robin(System* s){
 		s->internal = -1;
 	}
 
-	//@TODO process state ???
 }
 
 bool checkSafe(Banker* b, int avail, int length){
@@ -353,7 +391,11 @@ bool checkSafe(Banker* b, int avail, int length){
 }
 
 bool bankers(System* s, Process *p){
-	int length = s->rq->count + s->dq->count + 1;
+	int onebit = 1;
+	if (p == NULL){
+		onebit = 0;
+	}
+	int length = s->rq->count + s->dq->count + onebit;
 	Banker* bank = new Banker[length];
 	int index = 0;
 	Node* rq = s->rq->head;
@@ -374,11 +416,12 @@ bool bankers(System* s, Process *p){
 		dq = dq->next;
 		index ++;
 	}
+	if (p != NULL){
 	bank[index].finished = false;
 	bank[index].need = p->remain_dev;
 	bank[index].num = p->num;
 	bank[index].alloc = p->curr_dev;
-	
+	}
 	int avail = s->a_dev;
 	
 	bool safe = checkSafe(bank, avail, length);

@@ -112,5 +112,6 @@ void interruptQuant(System* s);
 bool bankers(System*s, Process* p);
 bool checkSafe(Banker* b, int avail, int length);
 void request_device(Dev d, System* s);
+void release_device(Dev d, System* s);
 
 #endif
