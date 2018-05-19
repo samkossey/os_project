@@ -223,8 +223,8 @@ void release_device(Dev d, System* s){
 			interruptQuant(s);
 			p->state = RQ;
 			//@TODO add to ready or check wait first??
-			checkWaitQ(s);
 			toReadyFromComplete(p,s);
+			checkWaitQ(s);
 			round_robin(s);
 	}
 	else{
