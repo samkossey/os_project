@@ -1,22 +1,29 @@
+// Samantha Kossey, Lakshmi Palaparthi
 #include "project.hpp"
 
+//for each new line, decides which parsing function is needed
 int parse(string line, System* s){
 	char first = line.at(0);
+	//system config
 	if (first == 'C'){
 		return parseC(line, s);
 	}
+	//process arrival
 	else if (first == 'A'){
 		return parseA(line, s);
 	}
+	//device request or release
 	else if (first == 'Q' || first == 'L'){
 		return parseQL(line, s);
 	}
+	//display
 	else if (first == 'D'){
 		return parseD(line, s);
 	}
 	return -1;
 }
 
+//system configuration parsing
 int parseC(string line, System* s){
 	int size = line.length();
 	int i = 0;
@@ -71,6 +78,7 @@ int parseC(string line, System* s){
 	return -1;
 }
 
+//display parsing
 int parseD(string line, System* s){
 	int i = 2;
 	int size = line.size();
@@ -79,6 +87,7 @@ int parseD(string line, System* s){
 		ti = ti + line.at(i);
 		i++;
 	}
+	//ensures input times are in order, any times out of order are skipped
 	if (atoi(ti.c_str()) < s->lastTime){
 		return -1;
 	}
@@ -89,6 +98,7 @@ int parseD(string line, System* s){
 
 }
 
+//process arrival parsing
 int parseA(string line, System* s){
 	Process* pr = new Process();
 	pr->waiting = 0;
@@ -103,6 +113,7 @@ int parseA(string line, System* s){
 				i++;
 			}
 			pr->arrival = atoi(ti.c_str());
+			//ensures input times are in order, any times out of order are skipped
 			if (pr->arrival < s->lastTime){
 				delete pr;
 				return -1;
@@ -173,6 +184,7 @@ int parseA(string line, System* s){
 	return pr->arrival;
 }
 
+//parsing for request/release of devices
 int parseQL(string line, System* s){
 	Dev dev;
 	int i = 0;
@@ -187,6 +199,7 @@ int parseQL(string line, System* s){
 				i++;
 			}
 			dev.ti = atoi(ti.c_str());
+			//ensures input times are in order, any times out of order are skipped
 			if (dev.ti < s->lastTime){
 				return -1;
 			}
@@ -202,6 +215,7 @@ int parseQL(string line, System* s){
 				i++;
 			}
 			dev.ti = atoi(ti.c_str());
+			//ensures input times are in order, any times out of order are skipped
 			if (dev.ti < s->lastTime){
 				return -1;
 			}
@@ -226,6 +240,7 @@ int parseQL(string line, System* s){
 				i++;
 			}
 			dev.num = atoi(d.c_str());
+			//if requesting too many devices skip request
 			if (dev.num > s->tot_dev){
 				return -1;
 			}

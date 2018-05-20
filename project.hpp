@@ -1,3 +1,4 @@
+// Samantha Kossey, Lakshmi Palaparthi
 #include <iostream>
 #include <fstream>
 #include "string.h"
@@ -10,81 +11,81 @@ using namespace std;
 #ifndef projectheader
 #define projectheader
 
-enum CurrState {New, Running, Submit, HQ1, HQ2, RQ, Wait, Complete};
+//possible job states
+enum CurrState {New, Running, HQ1, HQ2, RQ, Wait, Complete};
 
+//possible next external event arrival, request, release, display, new
+enum NextExt {A,Q,L,D,N};
 
-enum NextExt {A,Q,L,D,N,I};
-
+//jobs that arrive are saved in the process struct
 struct Process{
-	int num;
-	int arrival;
-	int tot_run;
-	int run_remain;
-	CurrState state;
-	int endQuant;
-	int memory;
-	int max_dev;
-	int curr_dev;
-	int remain_dev;
-	int compl_ti;
-	int priority;
+	int num; //job number
+	int arrival; //time job arrives
+	int tot_run; //total run time
+	int run_remain; //run time remaining
+	CurrState state; //state of process
+	int endQuant; //time its quantum will end if running
+	int memory; //memory required
+	int max_dev; //total # of devices
+	int curr_dev; //current allocated devices
+	int remain_dev; //how many devices it still needs
+	int compl_ti; //time the process finished running
+	int priority; //priority 1 or 2 determines which hold queue
 	int waiting; //how many devices it is waiting for
 
 };
 
+//structures to check for a safe state after pretending to allocate devices
 struct Banker{
-	int num;
-	int need;
-	int alloc;
-	bool finished;
-	// Banker(int n, int need, int a){
-	// 	num = n;
-	// 	need_dev = need;
-	// 	alloc = a;
-	// 	finished = false;
-	// }
-	// ~Banker(){
-		
-	// }
+	int num; //associated job number
+	int need; //how many the process still needs
+	int alloc; //how many the process has been allocated
+	bool finished; //whether or not the process finishes
 };
 
+//used to store device request/releases from the input file
 struct Dev{
-	int num;
-	int job_num;
+	int num; //number of devices required
+	int job_num; //associated job number
 	int action; //0 request, 1 release
-	int ti;
+	int ti; //time req/release was made
 };
 
 #include "linkedlist.hpp"
+//overall structure for the system
 struct System{
-	string filename;
-	int tot_mem;
-	int a_mem;
-	int tot_dev;
-	int a_dev;
-	int curr_ti;
-	int quantum;
-	int arrival;
-	int internal;
-	int external;
-	int lastTime;
-	NextExt next;
-	Process* process;
-	Process* running;
-	Dev devreq;
-	vector<Process*> jobs;
-	LinkedList* rq;
-	LinkedList* hq1;
-	LinkedList* hq2;
-	LinkedList* dq;
+	string filename; //name of input file
+	int tot_mem; //total memory in the system
+	int a_mem; //current available memory in the system
+	int tot_dev; //total number of devices in the system
+	int a_dev; //current available devices
+	int curr_ti; //current system time
+	int quantum; //length of RR quantum
+	int arrival; //time the system is initialized at
+	int internal; //time of next internal event
+	int external; //time of next external event
+	int lastTime; //last time read from input file (for error checking)
+	NextExt next; //next external event that will happen
+	Process* process; //saves a process arrival here
+	Process* running; //saves a running process here
+	Dev devreq; //saves a device request/release here
+	vector<Process*> jobs; //all the valid jobs that arrive
+	LinkedList* rq; //ready queue FIFO RR
+	LinkedList* hq1; //hold queue SJF
+	LinkedList* hq2; //hold queue 2 FIFO
+	LinkedList* dq; //device wait queue smallest request first
 	
+	//constructor
 	System(){
 		rq = new LinkedList();
 		hq1 = new LinkedList();
 		hq2 = new LinkedList();
 		dq = new LinkedList();
 		running = NULL;
+		process = NULL;
 	}
+	
+	//destructor
 	~System(){
 		delete rq;
 		delete hq1;

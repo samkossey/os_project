@@ -1,3 +1,4 @@
+// Samantha Kossey, Lakshmi Palaparthi
 #include "project.hpp"
 #include "linkedlist.hpp"
 
@@ -29,6 +30,7 @@ void handleEvent(System* s, bool ext){
 	}
 	else if(s->next == D){
 		//display(s);
+		s->external = -1;
 		cout << "will handle display" << endl;
 	}
 	else if(s->next == Q){
@@ -222,7 +224,7 @@ void release_device(Dev d, System* s){
 			s->a_dev = s->a_dev + d.num;
 			interruptQuant(s);
 			p->state = RQ;
-			//@TODO add to ready or check wait first??
+			
 			toReadyFromComplete(p,s);
 			checkWaitQ(s);
 			round_robin(s);
@@ -233,7 +235,7 @@ void release_device(Dev d, System* s){
 	}
 }
 
-//@TODO 
+
 void addFromHold(System* s){
 	Node* temp1 = s->hq1->head;
 	Node* temp2 = s->hq2->head;
@@ -401,7 +403,7 @@ bool bankers(System* s, Process *p){
 		onebit = 0;
 	}
 	int length = s->rq->count + s->dq->count + onebit;
-	Banker* bank = new Banker[length];
+	Banker bank[length];
 	int index = 0;
 	Node* rq = s->rq->head;
 	while (rq != NULL){
@@ -430,7 +432,6 @@ bool bankers(System* s, Process *p){
 	int avail = s->a_dev;
 	
 	bool safe = checkSafe(bank, avail, length);
-	delete [] bank;
 	return safe;
 
 }

@@ -1,6 +1,8 @@
+// Samantha Kossey, Lakshmi Palaparthi
 #include "project.hpp"
 #include "linkedlist.hpp"
 
+//linked list destructor (destroys each node)
 LinkedList::~LinkedList(){
     Node* temp = this->head;
     while (temp != NULL){
@@ -11,6 +13,7 @@ LinkedList::~LinkedList(){
     }
 }
 
+//saves the job numbers of the list in order in a vector, for display use
 vector<int> LinkedList::displayList(){
     Node* n = this->head;
     int length = this->count;
@@ -24,6 +27,7 @@ vector<int> LinkedList::displayList(){
     return list;
 }
 
+//adds new process to list in FIFO order
 void LinkedList::putFIFO(Process* p){
     Node *n = new Node(p);
     if (count == 0){
@@ -40,6 +44,7 @@ void LinkedList::putFIFO(Process* p){
     }
 }
 
+//puts new job in list in SJF order
 void LinkedList::putSJF(Process* p){
     Node *n = new Node(p);
     int run = p->tot_run;
@@ -68,6 +73,7 @@ void LinkedList::putSJF(Process* p){
     }
 }
 
+//puts new job in device queue in shortest request first order
 void LinkedList::putDQ(Process* p){
     Node *n = new Node(p);
     int w = p->waiting;
@@ -96,6 +102,7 @@ void LinkedList::putDQ(Process* p){
     }
 }
 
+//removes job from list/deletes its corresponding node
 void LinkedList::removeJob(int jobnum){
     Node* temp = this->head;
     if (temp->proc->num == jobnum){
@@ -124,30 +131,3 @@ void LinkedList::removeJob(int jobnum){
 }
 
 
-
-
-// int main(void){
-//     LinkedList* l = new LinkedList();
-//     Process* p = new Process();
-//     Process* p2 = new Process();
-//     Process* p3 = new Process();
-    
-//     p3->tot_run = 2;
-//     p3->num = 3;
-//     p->num = 1;
-//     p2->num = 2;
-//     p->tot_run = 2;
-//     p2->tot_run = 2;
-//     l->putSJF(p);
-//     l->putSJF(p2);
-//     l->putSJF(p3);
-//     l->removeJob(2);
-//     l->removeJob(3);
-//     l->removeJob(1);
-//     delete p;
-//     delete p2;
-//     delete p3;
-    
-//     delete l;
-//     return 0;
-// }

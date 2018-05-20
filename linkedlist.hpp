@@ -1,7 +1,10 @@
+// Samantha Kossey, Lakshmi Palaparthi
 #include "project.hpp"
 
 #ifndef linkedlistheader
 #define linkedlistheader
+
+//Node for linked list of processes
 struct Node{
 	Process* proc;
 	Node* next;
@@ -14,6 +17,7 @@ struct Node{
 	}
 };
 
+//linked list class for processes
 class LinkedList{
 public:
     Node* head;
@@ -23,31 +27,16 @@ public:
 	    head = NULL;
 	}
 	~LinkedList();
+	//for ready queue, hold queue 2
 	void putFIFO(Process* p);
+	//for hold queue 1
 	void putSJF(Process* p);
+	//for device queue, puts smallest device request first
 	void putDQ(Process* p);
+	//removes a job from the linked list
 	void removeJob(int jobnum);
+	//puts the job numbers of the linked list in a vector
 	vector<int> displayList();
-
-// 	{
-// 		Node* t = tail;
-// 		head= new Node(p);
-// 		if(head == 0)
-// 			head = tail;
-// 		else
-// 			t-> next = tail;
-// 			count++;
-// }
-
-// Process get(){
-// 	Process p = head-> proc;
-// 	Link t = head-> next;
-// 	delete head;
-// 	head = t;
-// 	if(head==0)
-// 		tail = 0;
-// 	return p;
-// }
     
 };
 
