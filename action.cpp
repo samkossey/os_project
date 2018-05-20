@@ -29,7 +29,7 @@ void handleEvent(System* s, bool ext){
 	}
 	//display
 	else if(s->next == D){
-		//display(s);
+		display(s);
 		s->external = -1;
 	}
 	//device request
@@ -56,10 +56,197 @@ void display(System* s){
 	string filename;
 	filename = s->filename + "_"+ ".json";
 	myfile.open (filename.c_str());
-	myfile << "Writing this to a file.\n";
+	
+	//ready queue
+	myfile << "{\"readyq\": [";
+	Node* r = s->rq->head;
+	string rq = print_queue(r);
+	myfile << rq;
+	
+	//current time
+	myfile << "], \"current_time\": ";
+	myfile << s->curr_ti;
+	myfile << ", ";
+	
+	//total memory
+	myfile << "\"total_memory\": ";
+	myfile << s->tot_mem;
+	myfile << ", ";
+	
+	//avail memory
+	myfile << "\"available_memory\": ";
+	myfile << s->a_mem;
+	myfile << ", ";
+	
+	//total devices
+	myfile << "\"total_devices\": ";
+	myfile << s->tot_dev;
+	myfile << ", ";
+	
+	//turnaround and weighted turnaround if applicable
+	if (s->curr_ti == 9999){
+		string turnt = turnaround_sys(s);
+		myfile << turnt;
+	}
+	
+	//running
+	if (s->running != NULL){
+		myfile << "\"running\": ";
+		myfile << s->running->num;
+		myfile << ", ";
+	}
+	
+	//submit queue
+	myfile << "\"submitq\": [], ";
+	
+	//hold queue 2
+	myfile << "\"holdq2\": [";
+	Node* h2 = s->hq2->head;
+	string hq2 = print_queue(h2);
+	myfile << hq2;
+	
+	//jobs
+	myfile << "], \"job\": [";
+	string jobs = print_job(s);
+	myfile << jobs;
+	
+	//hold queue 1
+	Node* h1 = s->hq1->head;
+	string hq1 = print_queue(h1);
+	myfile << "\"holdq1\": [";
+	myfile << hq1;
+	
+	//available devices
+	myfile << "], \"available_devices\": ";
+	myfile << s->a_dev;
+	
+	//quantum
+	myfile << ", \"quantum\": ";
+	myfile << s->quantum;
+	
+	//complete queue
+	myfile << ", \"completeq\": [";
+	Node* cq = s->complete->head;
+	string comp_q = print_queue(cq);
+	myfile << comp_q + "], ";
+	
+	//wait queue
+	myfile << ", \"waitq\": [";
+	Node* wq = s->dq->head;
+	string wait_q = print_queue(wq);
+	myfile << wait_q + "]}";
 	myfile.close();
-	
-	
+}
+
+string turnaround_sys(System* s){
+	string result = "";
+	int tot_turn = 0;
+	double overall_turn = 0;
+	double weighted = 0;
+	string w = "";
+	for (int i = 0; i < s->jobs.size(); i++){
+		tot_turn = (s->jobs[i]->compl_ti - s->jobs[i]->arrival);
+		overall_turn = overall_turn + tot_turn;
+		if (s->jobs[i]->tot_run != 0){
+		weighted = weighted + (tot_turn / s->jobs[i]->tot_run);
+		}
+		else{
+			w = " \"weighted_turnaround\": Error, ";
+		}
+	}
+	stringstream tt;
+	stringstream wt;
+	if (s->jobs.size() != 0){
+		weighted = weighted / s->jobs.size();
+		overall_turn = overall_turn / s->jobs.size();
+		if (w == ""){
+			wt >> weighted;
+			w = " \"weighted_turnaround\": " + wt.str() + ", ";
+		}
+		tt >> overall_turn;
+		result = "\"turnaround\": " + tt.str() + ", " + w;
+	}
+	else{
+		result = "\"turnaround\": Error, \"weighted_turnaround\": Error, ";
+	}
+	return result;
+}
+
+//print jobs
+string print_job(System* s){
+	string str = "";
+	for (int i = 0; i < s->jobs.size(); i++){
+		//arrival
+		stringstream arr_ti;
+		arr_ti << s->jobs[i]->arrival;
+		str = str + "{\"arrival_time\": " + arr_ti.str() + ", ";
+		//job id
+		str = str + "\"id\": ";
+		stringstream id;
+		id << s->jobs[i]->num;
+		//devices allocated
+		if (s->jobs[i]->state == Wait || s->jobs[i]->state == Running 
+		|| s->jobs[i]->state == RQ){
+		str = str + ", \"devices_allocated\": ";
+		stringstream deva;
+		deva << s->jobs[i]->curr_dev;
+		str = str + deva.str();
+		}
+		//remaining run time
+		str = str + id.str() + ", \"remaining_time\": ";
+		stringstream rem;
+		if (s->running == s->jobs[i]){
+			int remaining_run = s->jobs[i]->run_remain + (s->jobs[i]->endQuant - s->curr_ti);
+			rem << remaining_run;
+		}
+		else{
+		rem << s->jobs[i]->run_remain;
+		}
+		str = str + rem.str();
+		//complete time if applicable
+		if (s->jobs[i]->state == Complete){
+			str = str + ", \"completion_time\": ";
+			stringstream comp;
+			comp << s->jobs[i]->compl_ti;
+			str = str + comp.str();
+			str = str + ", \"turnaround\": ";
+			stringstream tt;
+			int turntime = s->jobs[i]->compl_ti - s->jobs[i]->arrival;
+			tt << turntime;
+			str = str + tt.str();
+			str = str + ", \"weighted_turnaround\": ";
+			double weighted = turntime/s->jobs[i]->tot_run;
+			stringstream wt;
+			wt << weighted;
+			str = str + wt.str();
+		}
+		
+		str = str + "}";
+		if (i+1 != s->jobs.size()){
+			str = str + ", ";
+		}
+	}
+	str = str + "], ";
+	return str;
+}
+
+//prints job numbers from queue
+string print_queue(Node* n){
+	string result = "";
+	if (n != NULL){
+		stringstream pn;
+		pn << n->proc->num;
+		result = result + pn.str();
+		n = n->next;
+	}
+	while (n != NULL){
+		result = result + ", ";
+		stringstream pn2;
+		pn2 << n->proc->num;
+		result = result + pn2.str();
+		n = n->next;
+	}
+	return result;
 }
 
 //process arrival, p is process to add

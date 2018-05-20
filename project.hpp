@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -117,5 +118,8 @@ bool bankers(System*s, Process* p);
 bool checkSafe(Banker* b, int avail, int length);
 void request_device(Dev d, System* s);
 void release_device(Dev d, System* s);
+string print_job(System* s);
+string print_queue(Node* n);
+string turnaround_sys(System* s);
 
 #endif

@@ -2,9 +2,11 @@
 
 # Samantha Kossey, Lakshmi Palaparthi
 
-# To compile: make
-
+# To compile: make clean, then make
 # Executable is ./main
+
+# ALTERNATIVELY: g++ project.cpp parse.cpp linkedlist.cpp action.cpp
+# Executable is ./a.out
 
 # When you run you will be asked to input a file name
 
