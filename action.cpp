@@ -54,7 +54,9 @@ void display(System* s){
 	
 	ofstream myfile;
 	string filename;
-	filename = s->filename + "_"+ ".json";
+	stringstream currtime;
+	currtime << s->curr_ti;
+	filename = s->filename + "_"+ currtime.str() + ".json";
 	myfile.open (filename.c_str());
 	
 	//ready queue
@@ -160,10 +162,10 @@ string turnaround_sys(System* s){
 		weighted = weighted / s->jobs.size();
 		overall_turn = overall_turn / s->jobs.size();
 		if (w == ""){
-			wt >> weighted;
+			wt << weighted;
 			w = " \"weighted_turnaround\": " + wt.str() + ", ";
 		}
-		tt >> overall_turn;
+		tt << overall_turn;
 		result = "\"turnaround\": " + tt.str() + ", " + w;
 	}
 	else{
@@ -211,14 +213,19 @@ string print_job(System* s){
 			str = str + comp.str();
 			str = str + ", \"turnaround\": ";
 			stringstream tt;
-			int turntime = s->jobs[i]->compl_ti - s->jobs[i]->arrival;
+			double turntime = s->jobs[i]->compl_ti - s->jobs[i]->arrival;
 			tt << turntime;
 			str = str + tt.str();
 			str = str + ", \"weighted_turnaround\": ";
+			if (s->jobs[i]->tot_run != 0){
 			double weighted = turntime/s->jobs[i]->tot_run;
 			stringstream wt;
 			wt << weighted;
 			str = str + wt.str();
+			}
+			else{
+				str = str + "Error";
+			}
 		}
 		
 		str = str + "}";
