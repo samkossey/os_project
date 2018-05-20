@@ -2,6 +2,8 @@
 #include "project.hpp"
 #include "linkedlist.hpp"
 
+//@TODO add errors printed
+
 //deletes job from vector of all jobs in the system
 void deleteJobSys(System* s, Process* p){
 	for (int i = 0; i < s->jobs.size(); i++){
