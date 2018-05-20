@@ -74,6 +74,7 @@ struct System{
 	LinkedList* hq1; //hold queue SJF
 	LinkedList* hq2; //hold queue 2 FIFO
 	LinkedList* dq; //device wait queue smallest request first
+	LinkedList* complete; //complete queue FIFO
 	
 	//constructor
 	System(){
@@ -81,6 +82,7 @@ struct System{
 		hq1 = new LinkedList();
 		hq2 = new LinkedList();
 		dq = new LinkedList();
+		complete = new LinkedList();
 		running = NULL;
 		process = NULL;
 	}
@@ -91,6 +93,7 @@ struct System{
 		delete hq1;
 		delete hq2;
 		delete dq;
+		delete complete;
 		for (int i = 0; i<this->jobs.size(); i++){
 		    delete this->jobs[i];
 		}

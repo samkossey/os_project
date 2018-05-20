@@ -17,6 +17,7 @@ int main(void){
 	//open file
 	input.open(name.c_str());
 	if (input.is_open()){
+		cout << "Opened input file successfully." << endl;
 		if (getline(input, line)){
 			//first line must be system specs if not just exit immediately
 			if (line.at(0) != 'C'){
@@ -70,8 +71,12 @@ int main(void){
 		}
 		//close input file
 		input.close();
+		cout << "Closed file successfully." << endl;
 		//deallocate system
 		delete sys;
+	}
+	else{
+		cout << "Could not find input file. Try again." << endl;
 	}
 
 	return 0;
