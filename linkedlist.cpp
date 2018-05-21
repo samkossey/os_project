@@ -13,20 +13,6 @@ LinkedList::~LinkedList(){
     }
 }
 
-//saves the job numbers of the list in order in a vector, for display use
-vector<int> LinkedList::displayList(){
-    Node* n = this->head;
-    int length = this->count;
-    vector<int> list;
-    int index = 0;
-    while (n != NULL){
-        list.push_back(n->proc->num);
-        n = n->next;
-        index++;
-    }
-    return list;
-}
-
 //adds new process to list in FIFO order
 void LinkedList::putFIFO(Process* p){
     Node *n = new Node(p);

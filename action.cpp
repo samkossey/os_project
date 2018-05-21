@@ -49,9 +49,12 @@ void display(System* s){
 	if (s->curr_ti > s->external){
 		return;
 	}
+	
+	//updates the current time
 	s->curr_ti = s->external;
 	s->external = -1;
 	
+	//creates a file for display named after the input file and the curr time
 	ofstream myfile;
 	string filename;
 	stringstream currtime;
@@ -133,22 +136,25 @@ void display(System* s){
 	myfile << comp_q + "], ";
 	
 	//wait queue
-	myfile << ", \"waitq\": [";
+	myfile << "\"waitq\": [";
 	Node* wq = s->dq->head;
 	string wait_q = print_queue(wq);
 	myfile << wait_q + "]}";
 	myfile.close();
 }
 
+//calculates the average turnaround and average weighted turnaround for 
+//the system
 string turnaround_sys(System* s){
 	string result = "";
-	int tot_turn = 0;
+	double tot_turn = 0;
 	double overall_turn = 0;
 	double weighted = 0;
 	string w = "";
 	for (int i = 0; i < s->jobs.size(); i++){
 		tot_turn = (s->jobs[i]->compl_ti - s->jobs[i]->arrival);
 		overall_turn = overall_turn + tot_turn;
+		//prevents divide by 0 error
 		if (s->jobs[i]->tot_run != 0){
 		weighted = weighted + (tot_turn / s->jobs[i]->tot_run);
 		}
@@ -158,6 +164,7 @@ string turnaround_sys(System* s){
 	}
 	stringstream tt;
 	stringstream wt;
+	//prevents divide by 0 error
 	if (s->jobs.size() != 0){
 		weighted = weighted / s->jobs.size();
 		overall_turn = overall_turn / s->jobs.size();
@@ -186,7 +193,8 @@ string print_job(System* s){
 		str = str + "\"id\": ";
 		stringstream id;
 		id << s->jobs[i]->num;
-		//devices allocated
+		str = str + id.str();
+		//devices allocated if in memory
 		if (s->jobs[i]->state == Wait || s->jobs[i]->state == Running 
 		|| s->jobs[i]->state == RQ){
 		str = str + ", \"devices_allocated\": ";
@@ -195,7 +203,7 @@ string print_job(System* s){
 		str = str + deva.str();
 		}
 		//remaining run time
-		str = str + id.str() + ", \"remaining_time\": ";
+		str = str + ", \"remaining_time\": ";
 		stringstream rem;
 		if (s->running == s->jobs[i]){
 			int remaining_run = s->jobs[i]->run_remain + (s->jobs[i]->endQuant - s->curr_ti);
@@ -211,12 +219,14 @@ string print_job(System* s){
 			stringstream comp;
 			comp << s->jobs[i]->compl_ti;
 			str = str + comp.str();
+			//turnaround and weighted turnaround
 			str = str + ", \"turnaround\": ";
 			stringstream tt;
 			double turntime = s->jobs[i]->compl_ti - s->jobs[i]->arrival;
 			tt << turntime;
 			str = str + tt.str();
 			str = str + ", \"weighted_turnaround\": ";
+			//protects from divide by 0 error
 			if (s->jobs[i]->tot_run != 0){
 			double weighted = turntime/s->jobs[i]->tot_run;
 			stringstream wt;
@@ -237,7 +247,7 @@ string print_job(System* s){
 	return str;
 }
 
-//prints job numbers from queue
+//prints job numbers from queue in the correct order
 string print_queue(Node* n){
 	string result = "";
 	if (n != NULL){

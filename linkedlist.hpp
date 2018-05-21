@@ -35,8 +35,6 @@ public:
 	void putDQ(Process* p);
 	//removes a job from the linked list
 	void removeJob(int jobnum);
-	//puts the job numbers of the linked list in a vector
-	vector<int> displayList();
     
 };
 
