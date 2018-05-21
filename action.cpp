@@ -30,7 +30,6 @@ void handleEvent(System* s, bool ext){
 	//display
 	else if(s->next == D){
 		display(s);
-		s->external = -1;
 	}
 	//device request
 	else if(s->next == Q){
@@ -40,6 +39,10 @@ void handleEvent(System* s, bool ext){
 	else if(s->next == L){
 		release_device(s->devreq, s);
 	}
+	else{
+		cout << "Error: No handle available for this event. Skipping." << endl;
+		s->external = -1;
+	}
 }
 
 //displays current state in std out and in json file named by input file
@@ -47,6 +50,8 @@ void handleEvent(System* s, bool ext){
 void display(System* s){
 	//double checks timing
 	if (s->curr_ti > s->external){
+		cout << "Error: Skipping event because it was supposed to happen before the current time." << endl;
+		s->external = -1;
 		return;
 	}
 	
@@ -169,6 +174,10 @@ string turnaround_sys(System* s){
 	double weighted = 0;
 	string w = "";
 	for (int i = 0; i < s->jobs.size(); i++){
+		if (s->jobs[i]->state != Complete){
+			cout << "Error: Tried to compute turnaround averages but not all jobs have completed." << endl;
+			return "\"turnaround\": Error, \"weighted_turnaround\": Error, ";
+		}
 		tot_turn = (s->jobs[i]->compl_ti - s->jobs[i]->arrival);
 		overall_turn = overall_turn + tot_turn;
 		//prevents divide by 0 error
@@ -176,6 +185,7 @@ string turnaround_sys(System* s){
 		weighted = weighted + (tot_turn / s->jobs[i]->tot_run);
 		}
 		else{
+			cout << "Error: Skipping weighted turnaround calculation that would've caused divide by 0 error." << endl;
 			w = " \"weighted_turnaround\": Error, ";
 		}
 	}
@@ -193,6 +203,7 @@ string turnaround_sys(System* s){
 		result = "\"turnaround\": " + tt.str() + ", " + w;
 	}
 	else{
+		cout << "Error: Skipping average calculations that would've caused divide by 0 error." << endl;
 		result = "\"turnaround\": Error, \"weighted_turnaround\": Error, ";
 	}
 	return result;
@@ -287,11 +298,13 @@ string print_queue(Node* n){
 void process_arrival(Process* p, System* s){
 	//if no process is available, error skip this event
 	if (p == NULL){
+		cout << "Error: Skipping process arrival because no process found." << endl;
 		s->external = -1;
 		return;
 	}
 	//double check timing
 	if (s->curr_ti > s->external){
+		cout << "Error: Skipping event because it was supposed to happen before the current time." << endl;
 		delete s->process;
 		s->process = NULL;
 		s->external = -1;
@@ -332,6 +345,7 @@ void process_arrival(Process* p, System* s){
 	}
 	//doesn't allow process to arrive if too big or too many devices needed
 	else{
+		cout << "Error: Deleting process because requires too much memory or too many devices." << endl;
 		delete s->process;
 		s->process = NULL;
 	}
@@ -380,6 +394,7 @@ void checkWaitQ(System* s){
 void request_device(Dev d, System* s){
 	//double check timing
 	if (s->curr_ti > s->external){
+		cout << "Error: Skipping event because it was supposed to happen before the current time." << endl;
 		s->external = -1;
 		return;
 	}
@@ -395,6 +410,7 @@ void request_device(Dev d, System* s){
 		//make sure request is less than tot number of devices
 		//should have already been filtered out by parseQL
 		if (d.num > s->tot_dev){
+			cout << "Error: Tried to request too many devices. Skipping." << endl;
 			return;
 		}
 		
@@ -443,6 +459,7 @@ void request_device(Dev d, System* s){
 		}
 	}
 	else{
+		cout << "Error: Skipping device request because the job wasn't currently running." << endl;
 		//is skipped because the process wasn't running
 	}
 }
@@ -465,6 +482,7 @@ void interruptQuant(System* s){
 void release_device(Dev d, System* s){
 	//double check timing
 	if (s->curr_ti > s->external){
+		cout << "Error: Skipping event because it was supposed to happen before the current time." << endl;
 		s->external = -1;
 		return;
 	}
@@ -493,6 +511,7 @@ void release_device(Dev d, System* s){
 	else{
 		//skipped because process wasn't running or wanted it to release more
 		//devices than it had allocated
+		cout << "Error: Skipping release devices because the process wasn't running or it wanted to release too many devices." << endl;
 	}
 }
 
@@ -566,7 +585,6 @@ void toReadyFromComplete(Process* p, System* s){
 		p->state = RQ;
 }
 
-//@TODO not done
 //when process completes, add to complete queue,
 //release devices/memory, check the device wait queue,
 //check the hold queue 1 then 2
@@ -585,6 +603,7 @@ void complete_process(Process* p, System* s){
 void round_robin(System* s){
 	//double check timing
 	if (s->curr_ti > s->internal){
+		cout << "Error: Skipping event because it was supposed to happen before the current time." << endl;
 		return;
 	}
 	

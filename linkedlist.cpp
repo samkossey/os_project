@@ -103,6 +103,7 @@ void LinkedList::removeJob(int jobnum){
         temp = temp->next;
     }
     if (temp->next == NULL){
+        cout << "Error: Tried to remove a job number that is not in the list." << cout;
         //not found
     }
     else{

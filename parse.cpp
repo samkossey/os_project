@@ -20,7 +20,10 @@ int parse(string line, System* s){
 	else if (first == 'D'){
 		return parseD(line, s);
 	}
-	return -1;
+	else{
+		cout << "Error: Could not find a handle for the event." << endl;
+		return -1;
+	}
 }
 
 //system configuration parsing
@@ -89,6 +92,7 @@ int parseD(string line, System* s){
 	}
 	//ensures input times are in order, any times out of order are skipped
 	if (atoi(ti.c_str()) < s->lastTime){
+		cout << "Error: Skipped event because was not in chronological order in input." << endl;
 		return -1;
 	}
 	s->next = D;
@@ -115,6 +119,7 @@ int parseA(string line, System* s){
 			pr->arrival = atoi(ti.c_str());
 			//ensures input times are in order, any times out of order are skipped
 			if (pr->arrival < s->lastTime){
+				cout << "Error: Skipped event because was not in chronological order in input." << endl;
 				delete pr;
 				return -1;
 			}
@@ -201,6 +206,7 @@ int parseQL(string line, System* s){
 			dev.ti = atoi(ti.c_str());
 			//ensures input times are in order, any times out of order are skipped
 			if (dev.ti < s->lastTime){
+				cout << "Error: Skipped event because was not in chronological order in input." << endl;
 				return -1;
 			}
 			i++;
@@ -217,6 +223,7 @@ int parseQL(string line, System* s){
 			dev.ti = atoi(ti.c_str());
 			//ensures input times are in order, any times out of order are skipped
 			if (dev.ti < s->lastTime){
+				cout << "Error: Skipped event because was not in chronological order in input." << endl;
 				return -1;
 			}
 			i++;
@@ -242,6 +249,7 @@ int parseQL(string line, System* s){
 			dev.num = atoi(d.c_str());
 			//if requesting too many devices skip request
 			if (dev.num > s->tot_dev){
+				cout << "Error: Skipped event because too many devices requested/released." << cout;
 				return -1;
 			}
 			i++;
