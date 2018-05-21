@@ -61,7 +61,7 @@ void display(System* s){
 	currtime << s->curr_ti;
 	filename = s->filename + "_"+ currtime.str() + ".json";
 	myfile.open (filename.c_str());
-	
+	if (myfile.is_open()){
 	//ready queue
 	myfile << "{\"readyq\": [";
 	Node* r = s->rq->head;
@@ -141,6 +141,23 @@ void display(System* s){
 	string wait_q = print_queue(wq);
 	myfile << wait_q + "]}";
 	myfile.close();
+	}
+	else{
+		cout << "Failed to open display file to write." << endl;
+	}
+	ifstream newdisplay;
+	newdisplay.open (filename.c_str());
+	string line = "";
+	if (newdisplay.is_open()){
+		if (getline(newdisplay, line)){
+			cout << "\nDISPLAY AT TIME ";
+			cout << s->curr_ti << endl;
+			cout << line << "\n" << endl;
+		}
+	}
+	else{
+		cout << "Failed to read display file to print." << endl;
+	}
 }
 
 //calculates the average turnaround and average weighted turnaround for 
