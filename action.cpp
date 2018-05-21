@@ -186,7 +186,7 @@ string turnaround_sys(System* s){
 		}
 		else{
 			cout << "Error: Skipping weighted turnaround calculation that would've caused divide by 0 error." << endl;
-			w = " \"weighted_turnaround\": Error, ";
+			w = " \"weighted_turnaround\": null, ";
 		}
 	}
 	stringstream tt;
@@ -204,7 +204,7 @@ string turnaround_sys(System* s){
 	}
 	else{
 		cout << "Error: Skipping average calculations that would've caused divide by 0 error." << endl;
-		result = "\"turnaround\": Error, \"weighted_turnaround\": Error, ";
+		result = "\"turnaround\": null, \"weighted_turnaround\": null, ";
 	}
 	return result;
 }
@@ -262,7 +262,7 @@ string print_job(System* s){
 			str = str + wt.str();
 			}
 			else{
-				str = str + "Error";
+				str = str + "null";
 			}
 		}
 		
