@@ -1,0 +1,1 @@
+{"readyq": [], "current_time": 6, "total_memory": 200, "available_memory": 80, "total_devices": 12, "running": 1, "submitq": [], "holdq2": [], "job": [{"arrival_time": 3, "id": 1, "devices_allocated": 0, "remaining_time": 7}, {"arrival_time": 4, "id": 1, "remaining_time": 10}], "holdq1": [1], "available_devices": 12, "quantum": 4, "completeq": [], "waitq": []}

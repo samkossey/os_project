@@ -2,8 +2,6 @@
 #include "project.hpp"
 #include "linkedlist.hpp"
 
-//@TODO add errors printed
-
 //deletes job from vector of all jobs in the system
 void deleteJobSys(System* s, Process* p){
 	for (int i = 0; i < s->jobs.size(); i++){
@@ -148,7 +146,7 @@ void display(System* s){
 	myfile.close();
 	}
 	else{
-		cout << "Failed to open display file to write." << endl;
+		cout << "Error: Failed to open display file to write." << endl;
 	}
 	ifstream newdisplay;
 	newdisplay.open (filename.c_str());
@@ -161,7 +159,7 @@ void display(System* s){
 		}
 	}
 	else{
-		cout << "Failed to read display file to print." << endl;
+		cout << "Error: Failed to read display file to print." << endl;
 	}
 }
 
@@ -356,7 +354,7 @@ void checkWaitQ(System* s){
 	Node* temp = s->dq->head;
 	while (temp != NULL){
 		//wait queue is shortest request first so once the requests get
-		//to big you can stop
+		//too big you can stop
 		if (temp->proc->waiting > s->a_dev){
 			break;
 		}
@@ -512,6 +510,7 @@ void release_device(Dev d, System* s){
 		//skipped because process wasn't running or wanted it to release more
 		//devices than it had allocated
 		cout << "Error: Skipping release devices because the process wasn't running or it wanted to release too many devices." << endl;
+		s->external = -1;
 	}
 }
 
